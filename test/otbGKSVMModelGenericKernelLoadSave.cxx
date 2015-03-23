@@ -22,7 +22,7 @@
 #include "otbImage.h"
 #include <iostream>
 
-#include "otbSVMModel.h"
+#include "otbGKSVMModel.h"
 
 namespace otb
 {
@@ -63,12 +63,12 @@ protected:
 
 }
 
-int otbSVMModelGenericKernelLoadSave(int itkNotUsed(argc), char* argv[])
+int otbGKSVMModelGenericKernelLoadSave(int itkNotUsed(argc), char* argv[])
 {
   typedef unsigned char InputPixelType;
   typedef unsigned char LabelPixelType;
 
-  typedef otb::SVMModel<InputPixelType, LabelPixelType> ModelType;
+  typedef otb::GKSVMModel<InputPixelType, LabelPixelType> ModelType;
 
   ModelType::Pointer svmModel = ModelType::New();
 

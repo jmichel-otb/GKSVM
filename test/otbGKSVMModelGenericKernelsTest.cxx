@@ -21,7 +21,7 @@
 #include "otbImage.h"
 #include <iostream>
 
-#include "otbSVMModel.h"
+#include "otbGKSVMModel.h"
 #include "otbSVMKernels.h"
 
 //For second test
@@ -33,7 +33,7 @@
 #include "otbVectorDataFileReader.h"
 #include "otbListSampleGenerator.h"
 
-int otbSVMModelGenericKernelsTest(int argc, char* argv[])
+int otbGKSVMModelGenericKernelsTest(int argc, char* argv[])
 {
   if (argc != 18)
     {
@@ -43,7 +43,7 @@ int otbSVMModelGenericKernelsTest(int argc, char* argv[])
   typedef unsigned char InputPixelType;
   typedef unsigned char LabelPixelType;
 
-  typedef otb::SVMModel<InputPixelType, LabelPixelType> ModelType;
+  typedef otb::GKSVMModel<InputPixelType, LabelPixelType> ModelType;
 
   ModelType::Pointer svmModel = ModelType::New();
 

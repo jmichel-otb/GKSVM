@@ -21,9 +21,9 @@
 #include "itkMacro.h"
 #include <iostream>
 #include "otbSVMKernels.h"
-#include "otbSVMModel.h"
+#include "otbGKSVMModel.h"
 
-int otbSVMModelCopyGenericKernelTest(int argc, char* argv[])
+int otbGKSVMModelCopyComposedKernelTest(int argc, char* argv[])
 {
   if (argc != 3)
     {
@@ -31,18 +31,15 @@ int otbSVMModelCopyGenericKernelTest(int argc, char* argv[])
     return EXIT_FAILURE;
     }
 
+
   typedef unsigned char InputPixelType;
   typedef unsigned char LabelPixelType;
 
-  typedef otb::SVMModel<InputPixelType, LabelPixelType> ModelType;
+  typedef otb::GKSVMModel<InputPixelType, LabelPixelType> ModelType;
 
-  // Create the model to be copied
-  ModelType::Pointer    svmModel = ModelType::New();
-  otb::RBFKernelFunctor lFunctor;
-  svmModel->SetKernelFunctor(&lFunctor);
+  ModelType::Pointer svmModel = ModelType::New();
   svmModel->LoadModel(argv[1]);
 
-  // Copy the model and print it
   ModelType::Pointer svmModelCopy;
   svmModelCopy = svmModel->GetCopy();
   svmModelCopy->SaveModel(argv[2]);

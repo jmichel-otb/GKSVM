@@ -99,7 +99,7 @@ int otbSVMClassifierImage(int argc, char* argv[])
   sample->SetImage(reader->GetOutput());
 
   /** preparing classifier and decision rule object */
-  typedef otb::SVMModel<InputPixelType, LabelPixelType> ModelType;
+  typedef otb::GKSVMModel<InputPixelType, LabelPixelType> ModelType;
 
   ModelType::Pointer model = ModelType::New();
 

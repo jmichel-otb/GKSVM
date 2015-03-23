@@ -20,14 +20,14 @@
 #include "otbImage.h"
 #include <iostream>
 
-#include "otbSVMModel.h"
+#include "otbGKSVMModel.h"
 
-int otbSVMModelCopyTest(int itkNotUsed(argc), char* argv[])
+int otbGKSVMModelCopyTest(int itkNotUsed(argc), char* argv[])
 {
   typedef unsigned char InputPixelType;
   typedef unsigned char LabelPixelType;
 
-  typedef otb::SVMModel<InputPixelType, LabelPixelType> ModelType;
+  typedef otb::GKSVMModel<InputPixelType, LabelPixelType> ModelType;
 
   ModelType::Pointer svmModel = ModelType::New();
 
