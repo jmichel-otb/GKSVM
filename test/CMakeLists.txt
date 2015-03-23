@@ -1,7 +1,7 @@
 otb_module_test()
 
-set(OTBGK-SVMTests
-otbGK-SVMTestDriver.cxx
+set(OTBGKSVMTests
+otbGKSVMTestDriver.cxx
 otbGKSVMModelCopyGenericKernelTest.cxx
 otbGKSVMModelCopyTest.cxx
 otbGKSVMModelGenericKernelLoadSave.cxx
@@ -11,12 +11,12 @@ otbSVMInverseCosSpectralAngleKernelFunctorImageClassificationTest.cxx
 otbGKSVMModelCopyComposedKernelTest.cxx
 )
 
-add_executable(otbGK-SVMTestDriver ${OTBGK-SVMTests})
-target_link_libraries(otbGK-SVMTestDriver ${OTBGK-SVM-Test_LIBRARIES})
-otb_module_target_label(otbGK-SVMTestDriver)
+add_executable(otbGKSVMTestDriver ${OTBGKSVMTests})
+target_link_libraries(otbGKSVMTestDriver ${OTBGKSVM-Test_LIBRARIES})
+otb_module_target_label(otbGKSVMTestDriver)
 
 # Tests Declaration
-otb_add_test(NAME leTvGKSVMModelCopyGenericKernel COMMAND otbGK-SVMTestDriver
+otb_add_test(NAME leTvGKSVMModelCopyGenericKernel COMMAND otbGKSVMTestDriver
   --compare-ascii ${NOTOL}  ${INPUTDATA}/svm_model_generic
   ${TEMP}/svmcopygeneric_test
   otbGKSVMModelCopyGenericKernelTest
@@ -25,7 +25,7 @@ otb_add_test(NAME leTvGKSVMModelCopyGenericKernel COMMAND otbGK-SVMTestDriver
 
   
 foreach(kernelType RANGE 0 18)
-  otb_add_test(NAME leTvSVMKernelTest${kernelType} COMMAND otbGK-SVMTestDriver
+  otb_add_test(NAME leTvSVMKernelTest${kernelType} COMMAND otbGKSVMTestDriver
     --compare-ascii ${EPSILON_9}
       ${BASELINE_FILES}/leTvSVMKernelTest${kernelType}.txt
       ${TEMP}/leTvSVMKernelTest${kernelType}.txt
@@ -37,21 +37,21 @@ foreach(kernelType RANGE 0 18)
   )
 endforeach()
 
-otb_add_test(NAME leTvGKSVMModelWithGenericKeywordKernelLoadSave COMMAND otbGK-SVMTestDriver
+otb_add_test(NAME leTvGKSVMModelWithGenericKeywordKernelLoadSave COMMAND otbGKSVMTestDriver
   --compare-ascii ${NOTOL}  ${BASELINE_FILES}/leTvsvmmodel_image_generic_version_test
   ${TEMP}/leTvsvmmodel_image_generic_version_test
   otbGKSVMModelGenericKernelLoadSave
   ${INPUTDATA}/svm_model_image_generic_version
   ${TEMP}/leTvsvmmodel_image_generic_version_test)
 
-otb_add_test(NAME leTvGKSVMModelKernelTypeGenericLoadSave COMMAND otbGK-SVMTestDriver
+otb_add_test(NAME leTvGKSVMModelKernelTypeGenericLoadSave COMMAND otbGKSVMTestDriver
   --compare-ascii ${NOTOL}  ${INPUTDATA}/svm_model_image_generic_kernel
   ${TEMP}/leTvsvmmodel_image_generic_kernel_test
   otbGKSVMModelGenericKernelLoadSave
   ${INPUTDATA}/svm_model_image_generic_kernel
   ${TEMP}/leTvsvmmodel_image_generic_kernel_test)
 
-otb_add_test(NAME leTvGKSVMModelGenericKernelsTest COMMAND otbGK-SVMTestDriver
+otb_add_test(NAME leTvGKSVMModelGenericKernelsTest COMMAND otbGKSVMTestDriver
   --compare-n-ascii ${NOTOL} 17
   ${BASELINE_FILES}/leTvGKSVMModelGenericKernelsTest1.txt
   ${TEMP}/leTvGKSVMModelGenericKernelsTest1.txt
@@ -107,7 +107,7 @@ otb_add_test(NAME leTvGKSVMModelGenericKernelsTest COMMAND otbGK-SVMTestDriver
   ${TEMP}/leTvGKSVMModelGenericKernelsTest17.txt
   )
 
-otb_add_test(NAME leTvSVMClassifierImageWithGenericKernalLinear COMMAND otbGK-SVMTestDriver
+otb_add_test(NAME leTvSVMClassifierImageWithGenericKernalLinear COMMAND otbGKSVMTestDriver
   --compare-image ${NOTOL}  ${BASELINE}/leTvSVMClassifierImageWithGenericKernalLinearOutput.png
   ${TEMP}/leTvSVMClassifierImageWithGenericKernalLinearOutput.png
   otbSVMClassifierImage
@@ -116,20 +116,20 @@ otb_add_test(NAME leTvSVMClassifierImageWithGenericKernalLinear COMMAND otbGK-SV
   ${TEMP}/leTvSVMClassifierImageWithGenericKernalLinearOutput.png)
 
 
-otb_add_test(NAME leTvSVMInverseCosSpectralAngleKernelFunctorImageModelEstimatorTest COMMAND otbGK-SVMTestDriver
+otb_add_test(NAME leTvSVMInverseCosSpectralAngleKernelFunctorImageModelEstimatorTest COMMAND otbGKSVMTestDriver
   otbSVMInverseCosSpectralAngleKernelFunctorImageModelEstimatorTest
   ${INPUTDATA}/ROI_QB_MUL_4.tif
   ${INPUTDATA}/ROI_QB_MUL_4_train_one_class.tif
   ${TEMP}/leTvsvm_model_image_one_class)
 
-otb_add_test(NAME leTvSVMInverseCosSpectralAngleKernelFunctorImageClassificationTest COMMAND otbGK-SVMTestDriver
+otb_add_test(NAME leTvSVMInverseCosSpectralAngleKernelFunctorImageClassificationTest COMMAND otbGKSVMTestDriver
   otbSVMInverseCosSpectralAngleKernelFunctorImageClassificationTest
   ${INPUTDATA}/ROI_QB_MUL_4.tif
   ${INPUTDATA}/ROI_QB_MUL_4_train_one_class.tif
   ${TEMP}/leTvsvm_model_image_one_class)
 
 
-otb_add_test(NAME leTvGKSVMModelCopyComposedKernel COMMAND otbGK-SVMTestDriver
+otb_add_test(NAME leTvGKSVMModelCopyComposedKernel COMMAND otbGKSVMTestDriver
   --compare-ascii ${NOTOL}  ${INPUTDATA}/svm_model_composed
   ${TEMP}/svmcopycomposed_test
   otbGKSVMModelCopyComposedKernelTest

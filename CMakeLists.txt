@@ -1,5 +1,5 @@
-project(OTBGK-SVM)
+project(OTBGKSVM)
 
-set(OTBGK-SVM_INCLUDE_DIRS ${OTBGK-SVM_SOURCE_DIR}/src)
+set(OTBGKSVM_INCLUDE_DIRS ${OTBGKSVM_SOURCE_DIR}/src)
 
 otb_module_impl()

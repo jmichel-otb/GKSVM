@@ -1,6 +1,6 @@
 set(DOCUMENTATION "This module contains the deprecated patched libSVM version (adding generic kernels to libSVM), as well as the classes to use it.")
 
-otb_module(OTBGK-SVM
+otb_module(OTBGKSVM
   DEPENDS
     
   TEST_DEPENDS

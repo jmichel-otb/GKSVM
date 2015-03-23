@@ -1,4 +1,4 @@
-set(OTBGK-SVM_SRC
+set(OTBGKSVM_SRC
   otbChangeProfileKernelFunctor.cxx
   otbMixturePolyRBFKernelFunctor.cxx
   otbNonGaussianRBFKernelFunctor.cxx
@@ -6,9 +6,9 @@ set(OTBGK-SVM_SRC
   gksvm.cpp
   )
 
-add_library(OTBGK-SVM ${OTBGK-SVM_SRC})
-target_link_libraries(OTBGK-SVM 
-  ${OTBGK-SVM_LIBRARIES}
+add_library(OTBGKSVM ${OTBGKSVM_SRC})
+target_link_libraries(OTBGKSVM 
+  ${OTBGKSVM_LIBRARIES}
   )
 
-otb_module_target(OTBGK-SVM)
+otb_module_target(OTBGKSVM)
