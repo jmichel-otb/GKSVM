@@ -1,6 +1,6 @@
-set(DOCUMENTATION "This module imports libsvm to the build system")
+set(DOCUMENTATION "This module contains the deprecated patched libSVM version (adding generic kernels to libSVM), as well as the classes to use it.")
 
-otb_module(OTBLibSVM
+otb_module(OTBGK-SVM
   DEPENDS
     
   TEST_DEPENDS
@@ -8,5 +8,3 @@ otb_module(OTBLibSVM
   DESCRIPTION
     "${DOCUMENTATION}"
   )
-
-otb_module_activation_option("Enable libSVM dependent modules" ON)

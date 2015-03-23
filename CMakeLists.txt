@@ -1,7 +1,5 @@
-project(OTBLibSVM)
-set(OTBLibSVM_THIRD_PARTY 1)
+project(OTBGK-SVM)
 
-set(OTBLibSVM_INCLUDE_DIRS ${OTBLibSVM_SOURCE_DIR}/src)
-set(OTBLibSVM_LIBRARIES otblibsvm)
+set(OTBGK-SVM_INCLUDE_DIRS ${OTBGK-SVM_SOURCE_DIR}/src)
 
 otb_module_impl()
