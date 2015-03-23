@@ -1,4 +1,4 @@
-#include "svm.h"
+#include "gksvm.h"
 #include <math.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -6,7 +6,7 @@
 #include <string.h>
 #include <iostream>
 
-int libsvm_version = LIBSVM_VERSION;
+int libgksvm_version = LIBGKSVM_VERSION;
 typedef float Qfloat;
 typedef signed char schar;
 #ifndef min
@@ -47,7 +47,7 @@ static void print_string_stdout(const char *s)
 #endif
   /*** End OTB modification ***/
 }
-static void (*svm_print_string) (const char *) = &print_string_stdout;
+static void (*gksvm_print_string) (const char *) = &print_string_stdout;
 #if 1
 static void info(const char *fmt,...)
 {
@@ -56,7 +56,7 @@ static void info(const char *fmt,...)
 	va_start(ap,fmt);
 	vsprintf(buf,fmt,ap);
 	va_end(ap);
-	(*svm_print_string)(buf);
+	(*gksvm_print_string)(buf);
 }
 #else
 static void info(const char *fmt,...) {}
@@ -205,11 +205,11 @@ public:
 
 class Kernel: public QMatrix {
 public:
-	Kernel(int l, svm_node * const * x, const svm_parameter& param);
+	Kernel(int l, gksvm_node * const * x, const gksvm_parameter& param);
 	virtual ~Kernel();
 
-	static double k_function(const svm_node *x, const svm_node *y,
-				 const svm_parameter& param);
+	static double k_function(const gksvm_node *x, const gksvm_node *y,
+				 const gksvm_parameter& param);
 	virtual Qfloat *get_Q(int column, int len) const = 0;
 	virtual double *get_QD() const = 0;
 	virtual void swap_index(int i, int j) const	// no so const...
@@ -221,46 +221,46 @@ protected:
 
   /*** Begin OTB modification ***/
   //double (Kernel::*kernel_function)(int i, int j) const;
-  double (Kernel::*kernel_function)(int i, int j, const svm_parameter& param) const;
-  const svm_parameter& m_param;
+  double (Kernel::*kernel_function)(int i, int j, const gksvm_parameter& param) const;
+  const gksvm_parameter& m_param;
   /*** End OTB modification ***/
 
 private:
-	const svm_node **x;
+	const gksvm_node **x;
 	double *x_square;
 
-	// svm_parameter
+	// gksvm_parameter
 	const int kernel_type;
 	const int degree;
 	const double gamma;
 	const double coef0;
 
-	static double dot(const svm_node *px, const svm_node *py);
+	static double dot(const gksvm_node *px, const gksvm_node *py);
 
-  /*** OTB modification : add svm_parameter to the list of parameters ***/
-	double kernel_linear(int i, int j, const svm_parameter&) const
+  /*** OTB modification : add gksvm_parameter to the list of parameters ***/
+	double kernel_linear(int i, int j, const gksvm_parameter&) const
 	{
 		return dot(x[i],x[j]);
 	}
-	double kernel_poly(int i, int j, const svm_parameter&) const
+	double kernel_poly(int i, int j, const gksvm_parameter&) const
 	{
 		return powi(gamma*dot(x[i],x[j])+coef0,degree);
 	}
-	double kernel_rbf(int i, int j, const svm_parameter&) const
+	double kernel_rbf(int i, int j, const gksvm_parameter&) const
 	{
 		return exp(-gamma*(x_square[i]+x_square[j]-2*dot(x[i],x[j])));
 	}
-	double kernel_sigmoid(int i, int j, const svm_parameter&) const
+	double kernel_sigmoid(int i, int j, const gksvm_parameter&) const
 	{
 		return tanh(gamma*dot(x[i],x[j])+coef0);
 	}
-	double kernel_precomputed(int i, int j, const svm_parameter&) const
+	double kernel_precomputed(int i, int j, const gksvm_parameter&) const
 	{
 		return x[i][(int)(x[j][0].value)].value;
 	}
 
 	/*** Begin OTB modification ***/
-  double kernel_generic(int i, int j, const svm_parameter& param) const
+  double kernel_generic(int i, int j, const gksvm_parameter& param) const
   {
     if( param.kernel_generic == NULL )
       {
@@ -270,7 +270,7 @@ private:
     return (*param.kernel_generic)(x[i],x[j],param);
   }
 
-  double kernel_composed(int i, int j, const svm_parameter& param) const
+  double kernel_composed(int i, int j, const gksvm_parameter& param) const
   {
     if( param.kernel_composed == NULL )
       {
@@ -282,7 +282,7 @@ private:
 	/*** End OTB modification ***/
 };
 
-Kernel::Kernel(int l, svm_node * const * x_, const svm_parameter& param)
+Kernel::Kernel(int l, gksvm_node * const * x_, const gksvm_parameter& param)
 :/*** Begin OTB modification ***/
  m_param(param),
  /*** End OTB modification ***/
@@ -334,7 +334,7 @@ Kernel::~Kernel()
 	delete[] x_square;
 }
 
-double Kernel::dot(const svm_node *px, const svm_node *py)
+double Kernel::dot(const gksvm_node *px, const gksvm_node *py)
 {
 	double sum = 0;
 	while(px->index != -1 && py->index != -1)
@@ -356,8 +356,8 @@ double Kernel::dot(const svm_node *px, const svm_node *py)
 	return sum;
 }
 
-double Kernel::k_function(const svm_node *x, const svm_node *y,
-			  const svm_parameter& param)
+double Kernel::k_function(const gksvm_node *x, const gksvm_node *y,
+			  const gksvm_parameter& param)
 {
 	switch(param.kernel_type)
 	{
@@ -1304,7 +1304,7 @@ double Solver_NU::calculate_rho()
 class SVC_Q: public Kernel
 { 
 public:
-	SVC_Q(const svm_problem& prob, const svm_parameter& param, const schar *y_)
+	SVC_Q(const gksvm_problem& prob, const gksvm_parameter& param, const schar *y_)
 	:Kernel(prob.l, prob.x, param)
 	{
 		clone(y,y_,prob.l);
@@ -1358,7 +1358,7 @@ private:
 class ONE_CLASS_Q: public Kernel
 {
 public:
-	ONE_CLASS_Q(const svm_problem& prob, const svm_parameter& param)
+	ONE_CLASS_Q(const gksvm_problem& prob, const gksvm_parameter& param)
 	:Kernel(prob.l, prob.x, param)
 	{
 		cache = new Cache(prob.l,(long int)(param.cache_size*(1<<20)));
@@ -1408,7 +1408,7 @@ private:
 class SVR_Q: public Kernel
 { 
 public:
-	SVR_Q(const svm_problem& prob, const svm_parameter& param)
+	SVR_Q(const gksvm_problem& prob, const gksvm_parameter& param)
 	:Kernel(prob.l, prob.x, param)
 	{
 		l = prob.l;
@@ -1488,7 +1488,7 @@ private:
 // construct and solve various formulations
 //
 static void solve_c_svc(
-	const svm_problem *prob, const svm_parameter* param,
+	const gksvm_problem *prob, const gksvm_parameter* param,
 	double *alpha, Solver::SolutionInfo* si, double Cp, double Cn)
 {
 	int l = prob->l;
@@ -1523,7 +1523,7 @@ static void solve_c_svc(
 }
 
 static void solve_nu_svc(
-	const svm_problem *prob, const svm_parameter *param,
+	const gksvm_problem *prob, const gksvm_parameter *param,
 	double *alpha, Solver::SolutionInfo* si)
 {
 	int i;
@@ -1578,7 +1578,7 @@ static void solve_nu_svc(
 }
 
 static void solve_one_class(
-	const svm_problem *prob, const svm_parameter *param,
+	const gksvm_problem *prob, const gksvm_parameter *param,
 	double *alpha, Solver::SolutionInfo* si)
 {
 	int l = prob->l;
@@ -1610,7 +1610,7 @@ static void solve_one_class(
 }
 
 static void solve_epsilon_svr(
-	const svm_problem *prob, const svm_parameter *param,
+	const gksvm_problem *prob, const gksvm_parameter *param,
 	double *alpha, Solver::SolutionInfo* si)
 {
 	int l = prob->l;
@@ -1648,7 +1648,7 @@ static void solve_epsilon_svr(
 }
 
 static void solve_nu_svr(
-	const svm_problem *prob, const svm_parameter *param,
+	const gksvm_problem *prob, const gksvm_parameter *param,
 	double *alpha, Solver::SolutionInfo* si)
 {
 	int l = prob->l;
@@ -1694,13 +1694,13 @@ struct decision_function
 	double rho;	
 };
 
-static decision_function svm_train_one(
-	const svm_problem *prob, const svm_parameter *param,
+static decision_function gksvm_train_one(
+	const gksvm_problem *prob, const gksvm_parameter *param,
 	double Cp, double Cn)
 {
 	double *alpha = Malloc(double,prob->l);
 	Solver::SolutionInfo si;
-	switch(param->svm_type)
+	switch(param->gksvm_type)
 	{
 		case C_SVC:
 			solve_c_svc(prob,param,alpha,&si,Cp,Cn);
@@ -1939,8 +1939,8 @@ static void multiclass_probability(int k, double **r, double *p)
 }
 
 // Cross-validation decision values for probability estimates
-static void svm_binary_svc_probability(
-	const svm_problem *prob, const svm_parameter *param,
+static void gksvm_binary_svc_probability(
+	const gksvm_problem *prob, const gksvm_parameter *param,
 	double Cp, double Cn, double& probA, double& probB)
 {
 	int i;
@@ -1960,10 +1960,10 @@ static void svm_binary_svc_probability(
 		int begin = i*prob->l/nr_fold;
 		int end = (i+1)*prob->l/nr_fold;
 		int j,k;
-		struct svm_problem subprob;
+		struct gksvm_problem subprob;
 
 		subprob.l = prob->l-(end-begin);
-		subprob.x = Malloc(struct svm_node*,subprob.l);
+		subprob.x = Malloc(struct gksvm_node*,subprob.l);
 		subprob.y = Malloc(double,subprob.l);
 			
 		k=0;
@@ -1997,7 +1997,7 @@ static void svm_binary_svc_probability(
 				dec_values[perm[j]] = -1;
 		else
 		{
-			svm_parameter subparam = *param;
+			gksvm_parameter subparam = *param;
 			subparam.probability=0;
 			subparam.C=1.0;
 			subparam.nr_weight=2;
@@ -2007,15 +2007,15 @@ static void svm_binary_svc_probability(
 			subparam.weight_label[1]=-1;
 			subparam.weight[0]=Cp;
 			subparam.weight[1]=Cn;
-			struct svm_model *submodel = svm_train(&subprob,&subparam);
+			struct gksvm_model *submodel = gksvm_train(&subprob,&subparam);
 			for(j=begin;j<end;j++)
 			{
-				svm_predict_values(submodel,prob->x[perm[j]],&(dec_values[perm[j]])); 
+				gksvm_predict_values(submodel,prob->x[perm[j]],&(dec_values[perm[j]])); 
 				// ensure +1 -1 order; reason not using CV subroutine
 				dec_values[perm[j]] *= submodel->label[0];
 			}		
-			svm_free_and_destroy_model(&submodel);
-			svm_destroy_param(&subparam);
+			gksvm_free_and_destroy_model(&submodel);
+			gksvm_destroy_param(&subparam);
 		}
 		free(subprob.x);
 		free(subprob.y);
@@ -2026,17 +2026,17 @@ static void svm_binary_svc_probability(
 }
 
 // Return parameter of a Laplace distribution 
-static double svm_svr_probability(
-	const svm_problem *prob, const svm_parameter *param)
+static double gksvm_svr_probability(
+	const gksvm_problem *prob, const gksvm_parameter *param)
 {
 	int i;
 	int nr_fold = 5;
 	double *ymv = Malloc(double,prob->l);
 	double mae = 0;
 
-	svm_parameter newparam = *param;
+	gksvm_parameter newparam = *param;
 	newparam.probability = 0;
-	svm_cross_validation(prob,&newparam,nr_fold,ymv);
+	gksvm_cross_validation(prob,&newparam,nr_fold,ymv);
 	for(i=0;i<prob->l;i++)
 	{
 		ymv[i]=prob->y[i]-ymv[i];
@@ -2060,7 +2060,7 @@ static double svm_svr_probability(
 
 // label: label name, start: begin of each class, count: #data of classes, perm: indices to the original data
 // perm, length l, must be allocated before calling this subroutine
-static void svm_group_classes(const svm_problem *prob, int *nr_class_ret, int **label_ret, int **start_ret, int **count_ret, int *perm)
+static void gksvm_group_classes(const gksvm_problem *prob, int *nr_class_ret, int **label_ret, int **start_ret, int **count_ret, int *perm)
 {
 	int l = prob->l;
 	int max_nr_class = 16;
@@ -2120,17 +2120,17 @@ static void svm_group_classes(const svm_problem *prob, int *nr_class_ret, int **
 //
 // Interface functions
 //
-svm_model *svm_train(const svm_problem *prob, const svm_parameter *param)
+gksvm_model *gksvm_train(const gksvm_problem *prob, const gksvm_parameter *param)
 {
   /*** Begin OTB modification ***/
-	svm_model *model = new svm_model;
+	gksvm_model *model = new gksvm_model;
 	/*** End OTB modification ***/
 	model->param = *param;
 	model->free_sv = 0;	// XXX
 
-	if(param->svm_type == ONE_CLASS ||
-	   param->svm_type == EPSILON_SVR ||
-	   param->svm_type == NU_SVR)
+	if(param->gksvm_type == ONE_CLASS ||
+	   param->gksvm_type == EPSILON_SVR ||
+	   param->gksvm_type == NU_SVR)
 	{
 		// regression or one-class-svm
 		model->nr_class = 2;
@@ -2140,14 +2140,14 @@ svm_model *svm_train(const svm_problem *prob, const svm_parameter *param)
 		model->sv_coef = Malloc(double *,1);
 
 		if(param->probability && 
-		   (param->svm_type == EPSILON_SVR ||
-		    param->svm_type == NU_SVR))
+		   (param->gksvm_type == EPSILON_SVR ||
+		    param->gksvm_type == NU_SVR))
 		{
 			model->probA = Malloc(double,1);
-			model->probA[0] = svm_svr_probability(prob,param);
+			model->probA[0] = gksvm_svr_probability(prob,param);
 		}
 
-		decision_function f = svm_train_one(prob,param,0,0);
+		decision_function f = gksvm_train_one(prob,param,0,0);
 		model->rho = Malloc(double,1);
 		model->rho[0] = f.rho;
 
@@ -2156,7 +2156,7 @@ svm_model *svm_train(const svm_problem *prob, const svm_parameter *param)
 		for(i=0;i<prob->l;i++)
 			if(fabs(f.alpha[i]) > 0) ++nSV;
 		model->l = nSV;
-		model->SV = Malloc(svm_node *,nSV);
+		model->SV = Malloc(gksvm_node *,nSV);
 		model->sv_coef[0] = Malloc(double,nSV);
 		int j = 0;
 		for(i=0;i<prob->l;i++)
@@ -2180,8 +2180,8 @@ svm_model *svm_train(const svm_problem *prob, const svm_parameter *param)
 		int *perm = Malloc(int,l);
 
 		// group training data of the same class
-		svm_group_classes(prob,&nr_class,&label,&start,&count,perm);		
-		svm_node **x = Malloc(svm_node *,l);
+		gksvm_group_classes(prob,&nr_class,&label,&start,&count,perm);		
+		gksvm_node **x = Malloc(gksvm_node *,l);
 		int i;
 		for(i=0;i<l;i++)
 			x[i] = prob->x[perm[i]];
@@ -2221,11 +2221,11 @@ svm_model *svm_train(const svm_problem *prob, const svm_parameter *param)
 		for(i=0;i<nr_class;i++)
 			for(int j=i+1;j<nr_class;j++)
 			{
-				svm_problem sub_prob;
+				gksvm_problem sub_prob;
 				int si = start[i], sj = start[j];
 				int ci = count[i], cj = count[j];
 				sub_prob.l = ci+cj;
-				sub_prob.x = Malloc(svm_node *,sub_prob.l);
+				sub_prob.x = Malloc(gksvm_node *,sub_prob.l);
 				sub_prob.y = Malloc(double,sub_prob.l);
 				int k;
 				for(k=0;k<ci;k++)
@@ -2240,9 +2240,9 @@ svm_model *svm_train(const svm_problem *prob, const svm_parameter *param)
 				}
 
 				if(param->probability)
-					svm_binary_svc_probability(&sub_prob,param,weighted_C[i],weighted_C[j],probA[p],probB[p]);
+					gksvm_binary_svc_probability(&sub_prob,param,weighted_C[i],weighted_C[j],probA[p],probB[p]);
 
-				f[p] = svm_train_one(&sub_prob,param,weighted_C[i],weighted_C[j]);
+				f[p] = gksvm_train_one(&sub_prob,param,weighted_C[i],weighted_C[j]);
 				for(k=0;k<ci;k++)
 					if(!nonzero[si+k] && fabs(f[p].alpha[k]) > 0)
 						nonzero[si+k] = true;
@@ -2301,7 +2301,7 @@ svm_model *svm_train(const svm_problem *prob, const svm_parameter *param)
 		info("Total nSV = %d\n",total_sv);
 
 		model->l = total_sv;
-		model->SV = Malloc(svm_node *,total_sv);
+		model->SV = Malloc(gksvm_node *,total_sv);
 		p = 0;
 		for(i=0;i<l;i++)
 			if(nonzero[i]) model->SV[p++] = x[i];
@@ -2359,7 +2359,7 @@ svm_model *svm_train(const svm_problem *prob, const svm_parameter *param)
 }
 
 // Stratified cross validation
-void svm_cross_validation(const svm_problem *prob, const svm_parameter *param, int nr_fold, double *target)
+void gksvm_cross_validation(const gksvm_problem *prob, const gksvm_parameter *param, int nr_fold, double *target)
 {
 	int i;
 	int *fold_start = Malloc(int,nr_fold+1);
@@ -2369,13 +2369,13 @@ void svm_cross_validation(const svm_problem *prob, const svm_parameter *param, i
 
 	// stratified cv may not give leave-one-out rate
 	// Each class to l folds -> some folds may have zero elements
-	if((param->svm_type == C_SVC ||
-	    param->svm_type == NU_SVC) && nr_fold < l)
+	if((param->gksvm_type == C_SVC ||
+	    param->gksvm_type == NU_SVC) && nr_fold < l)
 	{
 		int *start = NULL;
 		int *label = NULL;
 		int *count = NULL;
-		svm_group_classes(prob,&nr_class,&label,&start,&count,perm);
+		gksvm_group_classes(prob,&nr_class,&label,&start,&count,perm);
 
 		// random shuffle and then data grouped by fold using the array perm
 		int *fold_count = Malloc(int,nr_fold);
@@ -2435,10 +2435,10 @@ void svm_cross_validation(const svm_problem *prob, const svm_parameter *param, i
 		int begin = fold_start[i];
 		int end = fold_start[i+1];
 		int j,k;
-		struct svm_problem subprob;
+		struct gksvm_problem subprob;
 
 		subprob.l = l-(end-begin);
-		subprob.x = Malloc(struct svm_node*,subprob.l);
+		subprob.x = Malloc(struct gksvm_node*,subprob.l);
 		subprob.y = Malloc(double,subprob.l);
 			
 		k=0;
@@ -2454,19 +2454,19 @@ void svm_cross_validation(const svm_problem *prob, const svm_parameter *param, i
 			subprob.y[k] = prob->y[perm[j]];
 			++k;
 		}
-		struct svm_model *submodel = svm_train(&subprob,param);
+		struct gksvm_model *submodel = gksvm_train(&subprob,param);
 		if(param->probability && 
-		   (param->svm_type == C_SVC || param->svm_type == NU_SVC))
+		   (param->gksvm_type == C_SVC || param->gksvm_type == NU_SVC))
 		{
-			double *prob_estimates=Malloc(double,svm_get_nr_class(submodel));
+			double *prob_estimates=Malloc(double,gksvm_get_nr_class(submodel));
 			for(j=begin;j<end;j++)
-				target[perm[j]] = svm_predict_probability(submodel,prob->x[perm[j]],prob_estimates);
+				target[perm[j]] = gksvm_predict_probability(submodel,prob->x[perm[j]],prob_estimates);
 			free(prob_estimates);			
 		}
 		else
 			for(j=begin;j<end;j++)
-				target[perm[j]] = svm_predict(submodel,prob->x[perm[j]]);
-		svm_free_and_destroy_model(&submodel);
+				target[perm[j]] = gksvm_predict(submodel,prob->x[perm[j]]);
+		gksvm_free_and_destroy_model(&submodel);
 		free(subprob.x);
 		free(subprob.y);
 	}		
@@ -2475,26 +2475,26 @@ void svm_cross_validation(const svm_problem *prob, const svm_parameter *param, i
 }
 
 
-int svm_get_svm_type(const svm_model *model)
+int gksvm_get_gksvm_type(const gksvm_model *model)
 {
-	return model->param.svm_type;
+	return model->param.gksvm_type;
 }
 
-int svm_get_nr_class(const svm_model *model)
+int gksvm_get_nr_class(const gksvm_model *model)
 {
 	return model->nr_class;
 }
 
-void svm_get_labels(const svm_model *model, int* label)
+void gksvm_get_labels(const gksvm_model *model, int* label)
 {
 	if (model->label != NULL)
 		for(int i=0;i<model->nr_class;i++)
 			label[i] = model->label[i];
 }
 
-double svm_get_svr_probability(const svm_model *model)
+double gksvm_get_svr_probability(const gksvm_model *model)
 {
-	if ((model->param.svm_type == EPSILON_SVR || model->param.svm_type == NU_SVR) &&
+	if ((model->param.gksvm_type == EPSILON_SVR || model->param.gksvm_type == NU_SVR) &&
 	    model->probA!=NULL)
 		return model->probA[0];
 	else
@@ -2504,11 +2504,11 @@ double svm_get_svr_probability(const svm_model *model)
 	}
 }
 
-double svm_predict_values(const svm_model *model, const svm_node *x, double* dec_values)
+double gksvm_predict_values(const gksvm_model *model, const gksvm_node *x, double* dec_values)
 {
-	if(model->param.svm_type == ONE_CLASS ||
-	   model->param.svm_type == EPSILON_SVR ||
-	   model->param.svm_type == NU_SVR)
+	if(model->param.gksvm_type == ONE_CLASS ||
+	   model->param.gksvm_type == EPSILON_SVR ||
+	   model->param.gksvm_type == NU_SVR)
 	{
 		double *sv_coef = model->sv_coef[0];
 		double sum = 0;
@@ -2517,7 +2517,7 @@ double svm_predict_values(const svm_model *model, const svm_node *x, double* dec
 		sum -= model->rho[0];
 		*dec_values = sum;
 
-		if(model->param.svm_type == ONE_CLASS)
+		if(model->param.gksvm_type == ONE_CLASS)
 			return (sum>0)?1:-1;
 		else
 			return sum;
@@ -2580,31 +2580,31 @@ double svm_predict_values(const svm_model *model, const svm_node *x, double* dec
 	}
 }
 
-double svm_predict(const svm_model *model, const svm_node *x)
+double gksvm_predict(const gksvm_model *model, const gksvm_node *x)
 {
 	int nr_class = model->nr_class;
 	double *dec_values;
-	if(model->param.svm_type == ONE_CLASS ||
-	   model->param.svm_type == EPSILON_SVR ||
-	   model->param.svm_type == NU_SVR)
+	if(model->param.gksvm_type == ONE_CLASS ||
+	   model->param.gksvm_type == EPSILON_SVR ||
+	   model->param.gksvm_type == NU_SVR)
 		dec_values = Malloc(double, 1);
 	else 
 		dec_values = Malloc(double, nr_class*(nr_class-1)/2);
-	double pred_result = svm_predict_values(model, x, dec_values);
+	double pred_result = gksvm_predict_values(model, x, dec_values);
 	free(dec_values);
 	return pred_result;
 }
 
-double svm_predict_probability(
-	const svm_model *model, const svm_node *x, double *prob_estimates)
+double gksvm_predict_probability(
+	const gksvm_model *model, const gksvm_node *x, double *prob_estimates)
 {
-	if ((model->param.svm_type == C_SVC || model->param.svm_type == NU_SVC) &&
+	if ((model->param.gksvm_type == C_SVC || model->param.gksvm_type == NU_SVC) &&
 	    model->probA!=NULL && model->probB!=NULL)
 	{
 		int i;
 		int nr_class = model->nr_class;
 		double *dec_values = Malloc(double, nr_class*(nr_class-1)/2);
-		svm_predict_values(model, x, dec_values);
+		gksvm_predict_values(model, x, dec_values);
 
 		double min_prob=1e-7;
 		double **pairwise_prob=Malloc(double *,nr_class);
@@ -2631,10 +2631,10 @@ double svm_predict_probability(
 		return model->label[prob_max_idx];
 	}
 	else 
-		return svm_predict(model, x);
+		return gksvm_predict(model, x);
 }
 
-static const char *svm_type_table[] =
+static const char *gksvm_type_table[] =
 {
 	"c_svc","nu_svc","one_class","epsilon_svr","nu_svr",NULL
 };
@@ -2646,14 +2646,14 @@ static const char *kernel_type_table[]=
 	/*** End OTB modification ***/
 };
 
-int svm_save_model(const char *model_file_name, const svm_model *model)
+int gksvm_save_model(const char *model_file_name, const gksvm_model *model)
 {
 	FILE *fp = fopen(model_file_name,"w");
 	if(fp==NULL) return -1;
 
-	const svm_parameter& param = model->param;
+	const gksvm_parameter& param = model->param;
 
-	fprintf(fp,"svm_type %s\n", svm_type_table[param.svm_type]);
+	fprintf(fp,"gksvm_type %s\n", gksvm_type_table[param.gksvm_type]);
 	fprintf(fp,"kernel_type %s\n", kernel_type_table[param.kernel_type]);
 
   /*** Begin OTB modification ***/
@@ -2742,14 +2742,14 @@ int svm_save_model(const char *model_file_name, const svm_model *model)
 
 	fprintf(fp, "SV\n");
 	const double * const *sv_coef = model->sv_coef;
-	const svm_node * const *SV = model->SV;
+	const gksvm_node * const *SV = model->SV;
 
 	for(int i=0;i<l;i++)
 	{
 		for(int j=0;j<nr_class-1;j++)
 			fprintf(fp, "%.16g ",sv_coef[j][i]);
 
-		const svm_node *p = SV[i];
+		const gksvm_node *p = SV[i];
 
 		if(param.kernel_type == PRECOMPUTED)
 			fprintf(fp,"0:%d ",(int)(p->value));
@@ -2786,16 +2786,16 @@ static char* readline(FILE *input)
 	return line;
 }
 
-svm_model *svm_load_model(const char *model_file_name, GenericKernelFunctorBase* generic_kernel_functor)
+gksvm_model *gksvm_load_model(const char *model_file_name, GenericKernelFunctorBase* generic_kernel_functor)
 {
 	FILE *fp = fopen(model_file_name,"rb");
 	if(fp==NULL) return NULL;
 	
 	// read parameters
   /*** Begin OTB modification ***/
-	svm_model *model = new svm_model;
+	gksvm_model *model = new gksvm_model;
   /*** End OTB modification ***/
-	svm_parameter& param = model->param;
+	gksvm_parameter& param = model->param;
 	model->rho = NULL;
 	model->probA = NULL;
 	model->probB = NULL;
@@ -2807,19 +2807,19 @@ svm_model *svm_load_model(const char *model_file_name, GenericKernelFunctorBase*
 	{
 		fscanf(fp,"%80s",cmd);
 
-		if(strcmp(cmd,"svm_type")==0)
+		if(strcmp(cmd,"gksvm_type")==0)
 		{
 			fscanf(fp,"%80s",cmd);
 			int i;
-			for(i=0;svm_type_table[i];i++)
+			for(i=0;gksvm_type_table[i];i++)
 			{
-				if(strcmp(svm_type_table[i],cmd)==0)
+				if(strcmp(gksvm_type_table[i],cmd)==0)
 				{
-					param.svm_type=i;
+					param.gksvm_type=i;
 					break;
 				}
 			}
-			if(svm_type_table[i] == NULL)
+			if(gksvm_type_table[i] == NULL)
 			{
 				fprintf(stderr,"unknown svm type.\n");
 				free(model->rho);
@@ -2988,9 +2988,9 @@ svm_model *svm_load_model(const char *model_file_name, GenericKernelFunctorBase*
 	int i;
 	for(i=0;i<m;i++)
 		model->sv_coef[i] = Malloc(double,l);
-	model->SV = Malloc(svm_node*,l);
-	svm_node *x_space = NULL;
-	if(l>0) x_space = Malloc(svm_node,elements);
+	model->SV = Malloc(gksvm_node*,l);
+	gksvm_node *x_space = NULL;
+	if(l>0) x_space = Malloc(gksvm_node,elements);
 
 	int j=0;
 	for(i=0;i<l;i++)
@@ -3030,13 +3030,13 @@ svm_model *svm_load_model(const char *model_file_name, GenericKernelFunctorBase*
 }
 
 /*** Begin OTB modification ***/
-svm_model *svm_copy_model( const svm_model *model )
+gksvm_model *gksvm_copy_model( const gksvm_model *model )
 {
-  const svm_parameter& param = model->param;
+  const gksvm_parameter& param = model->param;
 
   // instanciated the copy
-  svm_model *modelCpy = new svm_model;
-  svm_parameter& paramCpy = modelCpy->param;
+  gksvm_model *modelCpy = new gksvm_model;
+  gksvm_parameter& paramCpy = modelCpy->param;
   modelCpy->rho = NULL;
   modelCpy->probA = NULL;
   modelCpy->probB = NULL;
@@ -3044,7 +3044,7 @@ svm_model *svm_copy_model( const svm_model *model )
   modelCpy->nSV = NULL;
 
   // SVM type copy
-  paramCpy.svm_type = param.svm_type;
+  paramCpy.gksvm_type = param.gksvm_type;
   // Kernel type copy
   paramCpy.kernel_type = param.kernel_type;
   // Param copy
@@ -3093,10 +3093,10 @@ svm_model *svm_copy_model( const svm_model *model )
 
   // SV copy
   const double * const *sv_coef = model->sv_coef;
-  const svm_node * const *SV = model->SV;
+  const gksvm_node * const *SV = model->SV;
 
-  modelCpy->SV = Malloc(svm_node*,l);
-  svm_node **SVCpy = modelCpy->SV;
+  modelCpy->SV = Malloc(gksvm_node*,l);
+  gksvm_node **SVCpy = modelCpy->SV;
 
   modelCpy->sv_coef = Malloc(double *,nr_class-1);
 
@@ -3107,7 +3107,7 @@ svm_model *svm_copy_model( const svm_model *model )
   unsigned int elements = 0;
   for (int p = 0; p < l; p++)
     {
-    const svm_node *tempNode = SV[p];
+    const gksvm_node *tempNode = SV[p];
     while (tempNode->index != -1)
       {
       tempNode++;
@@ -3118,10 +3118,10 @@ svm_model *svm_copy_model( const svm_model *model )
 
   if (l > 0)
     {
-    modelCpy->SV[0] = Malloc(svm_node,elements);
-    memcpy(modelCpy->SV[0], model->SV[0], sizeof(svm_node*) * elements);
+    modelCpy->SV[0] = Malloc(gksvm_node,elements);
+    memcpy(modelCpy->SV[0], model->SV[0], sizeof(gksvm_node*) * elements);
     }
-  svm_node *x_space = modelCpy->SV[0];
+  gksvm_node *x_space = modelCpy->SV[0];
 
   int j = 0;
   for (int i = 0; i < l; i++)
@@ -3132,8 +3132,8 @@ svm_model *svm_copy_model( const svm_model *model )
 
     // SV
     modelCpy->SV[i] = &x_space[j];
-    const svm_node *p = SV[i];
-    svm_node *pCpy = SVCpy[i];
+    const gksvm_node *p = SV[i];
+    gksvm_node *pCpy = SVCpy[i];
     while (p->index != -1)
       {
       pCpy->index = p->index;
@@ -3169,7 +3169,7 @@ svm_model *svm_copy_model( const svm_model *model )
 
 
 
-void svm_free_model_content(svm_model* model_ptr)
+void gksvm_free_model_content(gksvm_model* model_ptr)
 {
 	if(model_ptr->free_sv && model_ptr->l > 0)
 		free((void *)(model_ptr->SV[0]));
@@ -3184,24 +3184,24 @@ void svm_free_model_content(svm_model* model_ptr)
 	free(model_ptr->nSV);
 }
 
-void svm_free_and_destroy_model(svm_model** model_ptr_ptr)
+void gksvm_free_and_destroy_model(gksvm_model** model_ptr_ptr)
 {
-	svm_model* model_ptr = *model_ptr_ptr;
+	gksvm_model* model_ptr = *model_ptr_ptr;
 	if(model_ptr != NULL)
 	{
-		svm_free_model_content(model_ptr);
+		gksvm_free_model_content(model_ptr);
 		delete model_ptr;
 	}
 }
 
-void svm_destroy_model(svm_model* model_ptr)
+void gksvm_destroy_model(gksvm_model* model_ptr)
 {
-	fprintf(stderr,"warning: svm_destroy_model is deprecated and should not be used. Please use svm_free_and_destroy_model(svm_model **model_ptr_ptr)\n");
-	svm_free_and_destroy_model(&model_ptr);
+	fprintf(stderr,"warning: gksvm_destroy_model is deprecated and should not be used. Please use gksvm_free_and_destroy_model(gksvm_model **model_ptr_ptr)\n");
+	gksvm_free_and_destroy_model(&model_ptr);
 }
 
 /*** Begin OTB modification ***/
-void svm_destroy_param(svm_parameter* /*param*/)
+void gksvm_destroy_param(gksvm_parameter* /*param*/)
 {
   // done in destructor now
 	//free(param->weight_label);
@@ -3209,16 +3209,16 @@ void svm_destroy_param(svm_parameter* /*param*/)
 }
 /*** End OTB modification ***/
 
-const char *svm_check_parameter(const svm_problem *prob, const svm_parameter *param)
+const char *gksvm_check_parameter(const gksvm_problem *prob, const gksvm_parameter *param)
 {
-	// svm_type
+	// gksvm_type
 
-	int svm_type = param->svm_type;
-	if(svm_type != C_SVC &&
-	   svm_type != NU_SVC &&
-	   svm_type != ONE_CLASS &&
-	   svm_type != EPSILON_SVR &&
-	   svm_type != NU_SVR)
+	int gksvm_type = param->gksvm_type;
+	if(gksvm_type != C_SVC &&
+	   gksvm_type != NU_SVC &&
+	   gksvm_type != ONE_CLASS &&
+	   gksvm_type != EPSILON_SVR &&
+	   gksvm_type != NU_SVR)
 		return "unknown svm type";
 	
 	// kernel_type, degree
@@ -3250,19 +3250,19 @@ const char *svm_check_parameter(const svm_problem *prob, const svm_parameter *pa
 	if(param->eps <= 0)
 		return "eps <= 0";
 
-	if(svm_type == C_SVC ||
-	   svm_type == EPSILON_SVR ||
-	   svm_type == NU_SVR)
+	if(gksvm_type == C_SVC ||
+	   gksvm_type == EPSILON_SVR ||
+	   gksvm_type == NU_SVR)
 		if(param->C <= 0)
 			return "C <= 0";
 
-	if(svm_type == NU_SVC ||
-	   svm_type == ONE_CLASS ||
-	   svm_type == NU_SVR)
+	if(gksvm_type == NU_SVC ||
+	   gksvm_type == ONE_CLASS ||
+	   gksvm_type == NU_SVR)
 		if(param->nu <= 0 || param->nu > 1)
 			return "nu <= 0 or nu > 1";
 
-	if(svm_type == EPSILON_SVR)
+	if(gksvm_type == EPSILON_SVR)
 		if(param->p < 0)
 			return "p < 0";
 
@@ -3275,13 +3275,13 @@ const char *svm_check_parameter(const svm_problem *prob, const svm_parameter *pa
 		return "probability != 0 and probability != 1";
 
 	if(param->probability == 1 &&
-	   svm_type == ONE_CLASS)
+	   gksvm_type == ONE_CLASS)
 		return "one-class SVM probability output not supported yet";
 
 
 	// check whether nu-svc is feasible
 	
-	if(svm_type == NU_SVC)
+	if(gksvm_type == NU_SVC)
 	{
 		int l = prob->l;
 		int max_nr_class = 16;
@@ -3335,20 +3335,20 @@ const char *svm_check_parameter(const svm_problem *prob, const svm_parameter *pa
 	return NULL;
 }
 
-int svm_check_probability_model(const svm_model *model)
+int gksvm_check_probability_model(const gksvm_model *model)
 {
-	return ((model->param.svm_type == C_SVC || model->param.svm_type == NU_SVC) &&
+	return ((model->param.gksvm_type == C_SVC || model->param.gksvm_type == NU_SVC) &&
 		model->probA!=NULL && model->probB!=NULL) ||
-		((model->param.svm_type == EPSILON_SVR || model->param.svm_type == NU_SVR) &&
+		((model->param.gksvm_type == EPSILON_SVR || model->param.gksvm_type == NU_SVR) &&
 		 model->probA!=NULL);
 }
 
-void svm_set_print_string_function(void (*print_func)(const char *))
+void gksvm_set_print_string_function(void (*print_func)(const char *))
 {
 	if(print_func == NULL)
-		svm_print_string = &print_string_stdout;
+		gksvm_print_string = &print_string_stdout;
 	else
-		svm_print_string = print_func;
+		gksvm_print_string = print_func;
 }
 
 /*** Begin OTB modification ***/
@@ -3380,7 +3380,7 @@ GenericKernelFunctorBase* GenericKernelFunctorBase::Clone() const
   return new Self(*this);
 }
 
-double GenericKernelFunctorBase::operator()(const svm_node * /*x*/, const svm_node * /*y*/, const svm_parameter& /*param*/) const
+double GenericKernelFunctorBase::operator()(const gksvm_node * /*x*/, const gksvm_node * /*y*/, const gksvm_parameter& /*param*/) const
 {
   fprintf(stderr, "Kernel functor not definied (Null)");
   return 0;
@@ -3391,7 +3391,7 @@ double GenericKernelFunctorBase::operator()(const svm_node * /*x*/, const svm_no
 // index is the current value
 // isAtEnd to indicate that it's the last possible derivation
 // baseValue is the constant of the formula
-double GenericKernelFunctorBase::derivative(const svm_node * /*x*/, const svm_node * /*y*/, const svm_parameter& /*param*/,
+double GenericKernelFunctorBase::derivative(const gksvm_node * /*x*/, const gksvm_node * /*y*/, const gksvm_parameter& /*param*/,
                           int /*degree*/, int /*index*/, bool /*isAtEnd*/, double /*constValue*/) const
 {
   fprintf(stderr, "derivative method not definied (Null)");
@@ -3465,7 +3465,7 @@ print_parameters(void)const
 
 double
 GenericKernelFunctorBase::
-dot(const svm_node *px, const svm_node *py)const
+dot(const gksvm_node *px, const gksvm_node *py)const
 {
   double sum = 0.;
 
@@ -3488,17 +3488,17 @@ dot(const svm_node *px, const svm_node *py)const
   return sum;
 }
 
-svm_node *
+gksvm_node *
 GenericKernelFunctorBase::
-sub(const svm_node *px, const svm_node *py) const
+sub(const gksvm_node *px, const gksvm_node *py) const
   /* compute the difference a-b of two sparse vectors */
   /* Note: SVECTOR lists are not followed, but only the first
      SVECTOR is used */
 {
   long veclength = 1;
 
-  const svm_node * pxbis = px;
-  const svm_node * pybis = py;
+  const gksvm_node * pxbis = px;
+  const gksvm_node * pybis = py;
 
   while (px->index != -1 && py->index != -1)
     {
@@ -3532,8 +3532,8 @@ sub(const svm_node *px, const svm_node *py) const
       ++px;
     }
 
-  svm_node *vec;
-  vec = new svm_node[veclength];
+  gksvm_node *vec;
+  vec = new gksvm_node[veclength];
   unsigned long int vecIt = 0;
 
   px = pxbis;
@@ -3589,15 +3589,15 @@ sub(const svm_node *px, const svm_node *py) const
 }
 
 
-svm_node *
+gksvm_node *
 GenericKernelFunctorBase::
-add(const svm_node *px, const svm_node *py) const
+add(const gksvm_node *px, const gksvm_node *py) const
   /* compute the sum a+b of two sparse vectors */
   /* Note: SVECTOR lists are not followed, but only the first
      SVECTOR is used */
 {
-  const svm_node * pxbis = px;
-  const svm_node * pybis = py;
+  const gksvm_node * pxbis = px;
+  const gksvm_node * pybis = py;
   long veclength = 1;
 
   while (px->index != -1 && py->index != -1)
@@ -3632,8 +3632,8 @@ add(const svm_node *px, const svm_node *py) const
       ++px;
     }
 
-  svm_node *vec;
-  vec = new svm_node[veclength];
+  gksvm_node *vec;
+  vec = new gksvm_node[veclength];
   unsigned long int vecIt = 0;
 
   px = pxbis;
@@ -3752,7 +3752,7 @@ ComposedKernelFunctor* ComposedKernelFunctor::Clone() const
   return new Self(*this);
 }
 
-double ComposedKernelFunctor::operator()(const svm_node *x, const svm_node *y, const svm_parameter& param) const
+double ComposedKernelFunctor::operator()(const gksvm_node *x, const gksvm_node *y, const gksvm_parameter& param) const
 {
   double out = 0.;
   if (!m_KernelFunctorList.empty() && !m_PonderationList.empty() && m_KernelFunctorList.size()
@@ -3778,7 +3778,7 @@ double ComposedKernelFunctor::operator()(const svm_node *x, const svm_node *y, c
   return out;
 }
 
-double ComposedKernelFunctor::derivative(const svm_node *x, const svm_node *y, const svm_parameter& param, int degree, int index, bool isAtEnd, double constValue) const
+double ComposedKernelFunctor::derivative(const gksvm_node *x, const gksvm_node *y, const gksvm_parameter& param, int degree, int index, bool isAtEnd, double constValue) const
 {
   double out = 0.;
   if (m_KernelFunctorList.size() != 0 && m_PonderationList.size() != 0 && m_KernelFunctorList.size()
@@ -3968,7 +3968,7 @@ void ComposedKernelFunctor::ClearFunctorList()
 }
 
 
-/** Set/Get the ponderation list to apply to each svm_model of the composed kernel */
+/** Set/Get the ponderation list to apply to each gksvm_model of the composed kernel */
 std::vector<double> ComposedKernelFunctor::GetPonderationList()
 {
   return m_PonderationList;

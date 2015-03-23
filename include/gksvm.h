@@ -1,7 +1,7 @@
-#ifndef _LIBSVM_H
-#define _LIBSVM_H
+#ifndef _LIBGKSVM_H
+#define _LIBGKSVM_H
 
-#define LIBSVM_VERSION 300
+#define LIBGKSVM_VERSION 300
 
 /*** Begin OTB modification ***/
 #include <stdio.h>
@@ -14,8 +14,8 @@
 #include <vector>
 
 
-struct svm_node;
-struct svm_parameter;
+struct gksvm_node;
+struct gksvm_parameter;
 
 /** \class GenericKernelFunctorBase
  * \brief Undocumented
@@ -37,10 +37,10 @@ public:
 
   virtual GenericKernelFunctorBase* Clone() const;
 
-  virtual double operator()(const svm_node * /*x*/, const svm_node * /*y*/, const svm_parameter& /*param*/) const;
+  virtual double operator()(const gksvm_node * /*x*/, const gksvm_node * /*y*/, const gksvm_parameter& /*param*/) const;
 
 
-  virtual double derivative(const svm_node * /*x*/, const svm_node * /*y*/, const svm_parameter& /*param*/,
+  virtual double derivative(const gksvm_node * /*x*/, const gksvm_node * /*y*/, const gksvm_parameter& /*param*/,
                             int /*degree*/, int /*index*/, bool /*isAtEnd*/, double /*constValue*/) const;
 
   virtual int load_parameters(FILE ** pfile);
@@ -49,11 +49,11 @@ public:
 
   virtual void print_parameters(void) const;
 
-  virtual double dot(const svm_node *px, const svm_node *py) const;
+  virtual double dot(const gksvm_node *px, const gksvm_node *py) const;
 
-  virtual svm_node * sub(const svm_node *px, const svm_node *py) const;
+  virtual gksvm_node * sub(const gksvm_node *px, const gksvm_node *py) const;
 
-  virtual svm_node * add(const svm_node *px, const svm_node *py) const;
+  virtual gksvm_node * add(const gksvm_node *px, const gksvm_node *py) const;
 
   virtual void SetName(std::string name);
   virtual std::string GetName(void) const;
@@ -118,14 +118,14 @@ public:
 
   typedef std::vector<GenericKernelFunctorBase *> KernelListType;
 
-  virtual double operator()(const svm_node *x, const svm_node *y, const svm_parameter& param) const;
+  virtual double operator()(const gksvm_node *x, const gksvm_node *y, const gksvm_parameter& param) const;
 
   /** Used for Taylor classification*/
   // degree is the developement degree
   // index is the current value
   // isAtEnd to indicate that it's the last possible derivation
   // baseValue is the constant of the formula
-  virtual double derivative(const svm_node *x, const svm_node *y, const svm_parameter& param, int degree, int index, bool isAtEnd, double constValue) const;
+  virtual double derivative(const gksvm_node *x, const gksvm_node *y, const gksvm_parameter& param, int degree, int index, bool isAtEnd, double constValue) const;
 
   virtual int load_parameters(FILE ** pfile);
 
@@ -142,7 +142,7 @@ public:
   // Add 1 element to the end of the list. A clone is made of the kernel
   void AddKernelFunctorModelToKernelList(const GenericKernelFunctorBase * kernelfunctor);
 
-  /** Set/Get the ponderation list to apply to each svm_model of the composed kernel */
+  /** Set/Get the ponderation list to apply to each gksvm_model of the composed kernel */
   std::vector<double> GetPonderationList();
   void SetPonderationModelList(const std::vector<double> & list);
   // Add 1 element to the end of the list
@@ -169,7 +169,7 @@ private:
 
   /** Generic kernel functors that composed kernel */
   KernelListType m_KernelFunctorList;
-  /** Ponderation list to apply to each svm_model of the composed kernel*/
+  /** Ponderation list to apply to each gksvm_model of the composed kernel*/
   std::vector<double> m_PonderationList;
 };
 
@@ -178,28 +178,28 @@ private:
 //#endif
 /*** End OTB modification ***/
 
-extern int libsvm_version;
+extern int libgksvm_version;
 
-struct svm_node
+struct gksvm_node
 {
 	int index;
 	double value;
 };
 
-struct svm_problem
+struct gksvm_problem
 {
 	int l;
 	double *y;
-	struct svm_node **x;
+	struct gksvm_node **x;
 };
 
-enum { C_SVC, NU_SVC, ONE_CLASS, EPSILON_SVR, NU_SVR };	/* svm_type */
+enum { C_SVC, NU_SVC, ONE_CLASS, EPSILON_SVR, NU_SVR };	/* gksvm_type */
 enum { LINEAR, POLY, RBF, SIGMOID, PRECOMPUTED, GENERIC, COMPOSED }; /* kernel_type */
 
-struct svm_parameter
+struct gksvm_parameter
 {
   /*** Begin OTB modification ***/
-  svm_parameter()
+  gksvm_parameter()
   : kernel_generic(NULL),
     kernel_composed(NULL),
     nr_weight(0),
@@ -208,7 +208,7 @@ struct svm_parameter
   {
   }
 
-  svm_parameter(const svm_parameter& copy)
+  gksvm_parameter(const gksvm_parameter& copy)
   : kernel_generic(NULL),
     kernel_composed(NULL),
     nr_weight(0),
@@ -218,7 +218,7 @@ struct svm_parameter
     *this = copy;
   }
 
-  ~svm_parameter()
+  ~gksvm_parameter()
   {
     delete kernel_generic;
     delete kernel_composed;
@@ -226,9 +226,9 @@ struct svm_parameter
     free(weight);
   }
 
-  svm_parameter& operator=(const svm_parameter& copy)
+  gksvm_parameter& operator=(const gksvm_parameter& copy)
   {
-    svm_type = copy.svm_type;
+    gksvm_type = copy.gksvm_type;
     kernel_type = copy.kernel_type;
     degree = copy.degree;
     gamma = copy.gamma;
@@ -271,7 +271,7 @@ struct svm_parameter
   }
   /*** End OTB modification ***/
 
-  int svm_type;
+  int gksvm_type;
 	int kernel_type;
 	int degree;	/* for poly */
 	double gamma;	/* for poly/rbf/sigmoid */
@@ -299,14 +299,14 @@ struct svm_parameter
 };
 
 //
-// svm_model
+// gksvm_model
 //
-struct svm_model
+struct gksvm_model
 {
-	struct svm_parameter param;	/* parameter */
+	struct gksvm_parameter param;	/* parameter */
 	int nr_class;		/* number of classes, = 2 in regression/one class svm */
 	int l;			/* total #SV */
-	struct svm_node **SV;		/* SVs (SV[l]) */
+	struct gksvm_node **SV;		/* SVs (SV[l]) */
 	double **sv_coef;	/* coefficients for SVs in decision functions (sv_coef[k-1][l]) */
 	double *rho;		/* constants in decision functions (rho[k*(k-1)/2]) */
 	double *probA;		/* pariwise probability information */
@@ -318,40 +318,40 @@ struct svm_model
 	int *nSV;		/* number of SVs for each class (nSV[k]) */
 				/* nSV[0] + nSV[1] + ... + nSV[k-1] = l */
 	/* XXX */
-	int free_sv;		/* 1 if svm_model is created by svm_load_model*/
-				/* 0 if svm_model is created by svm_train */
+	int free_sv;		/* 1 if gksvm_model is created by gksvm_load_model*/
+				/* 0 if gksvm_model is created by gksvm_train */
 };
 
-struct svm_model *svm_train(const struct svm_problem *prob, const struct svm_parameter *param);
-void svm_cross_validation(const struct svm_problem *prob, const struct svm_parameter *param, int nr_fold, double *target);
+struct gksvm_model *gksvm_train(const struct gksvm_problem *prob, const struct gksvm_parameter *param);
+void gksvm_cross_validation(const struct gksvm_problem *prob, const struct gksvm_parameter *param, int nr_fold, double *target);
 
-int svm_save_model(const char *model_file_name, const struct svm_model *model);
+int gksvm_save_model(const char *model_file_name, const struct gksvm_model *model);
 /*** Begin OTB modification ***/
-struct svm_model *svm_load_model(const char *model_file_name, GenericKernelFunctorBase* generic_kernel_functor = NULL);
-struct svm_model *svm_copy_model( const svm_model *model );
+struct gksvm_model *gksvm_load_model(const char *model_file_name, GenericKernelFunctorBase* generic_kernel_functor = NULL);
+struct gksvm_model *gksvm_copy_model( const gksvm_model *model );
 /*** End OTB modification ***/
 
-int svm_get_svm_type(const struct svm_model *model);
-int svm_get_nr_class(const struct svm_model *model);
-void svm_get_labels(const struct svm_model *model, int *label);
-double svm_get_svr_probability(const struct svm_model *model);
+int gksvm_get_gksvm_type(const struct gksvm_model *model);
+int gksvm_get_nr_class(const struct gksvm_model *model);
+void gksvm_get_labels(const struct gksvm_model *model, int *label);
+double gksvm_get_svr_probability(const struct gksvm_model *model);
 
-double svm_predict_values(const struct svm_model *model, const struct svm_node *x, double* dec_values);
-double svm_predict(const struct svm_model *model, const struct svm_node *x);
-double svm_predict_probability(const struct svm_model *model, const struct svm_node *x, double* prob_estimates);
+double gksvm_predict_values(const struct gksvm_model *model, const struct gksvm_node *x, double* dec_values);
+double gksvm_predict(const struct gksvm_model *model, const struct gksvm_node *x);
+double gksvm_predict_probability(const struct gksvm_model *model, const struct gksvm_node *x, double* prob_estimates);
 
-void svm_free_model_content(struct svm_model *model_ptr);
-void svm_free_and_destroy_model(struct svm_model **model_ptr_ptr);
-void svm_destroy_param(struct svm_parameter *param);
+void gksvm_free_model_content(struct gksvm_model *model_ptr);
+void gksvm_free_and_destroy_model(struct gksvm_model **model_ptr_ptr);
+void gksvm_destroy_param(struct gksvm_parameter *param);
 
-const char *svm_check_parameter(const struct svm_problem *prob, const struct svm_parameter *param);
-int svm_check_probability_model(const struct svm_model *model);
+const char *gksvm_check_parameter(const struct gksvm_problem *prob, const struct gksvm_parameter *param);
+int gksvm_check_probability_model(const struct gksvm_model *model);
 
-void svm_set_print_string_function(void (*print_func)(const char *));
+void gksvm_set_print_string_function(void (*print_func)(const char *));
 
 // deprecated
 // this function will be removed in future release
-void svm_destroy_model(struct svm_model *model_ptr);
+void gksvm_destroy_model(struct gksvm_model *model_ptr);
 
 /*** Begin OTB modification ***/
 //#ifdef __cplusplus
@@ -359,4 +359,4 @@ void svm_destroy_model(struct svm_model *model_ptr);
 //#endif
 /*** End OTB modification ***/
 
-#endif /* _LIBSVM_H */
+#endif /* _LIBGKSVM_H */
