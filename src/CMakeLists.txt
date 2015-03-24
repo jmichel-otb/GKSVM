@@ -9,6 +9,8 @@ set(OTBGKSVM_SRC
 add_library(OTBGKSVM ${OTBGKSVM_SRC})
 target_link_libraries(OTBGKSVM 
   ${OTBGKSVM_LIBRARIES}
+  ${OTBImageBase_LIBRARIES}
+  ${OTBCommon_LIBRARIES}
   )
 
 otb_module_target(OTBGKSVM)

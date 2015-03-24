@@ -2,7 +2,8 @@ set(DOCUMENTATION "This module contains the deprecated patched libSVM version (a
 
 otb_module(OTBGKSVM
   DEPENDS
-    
+    OTBITK
+    OTBImageBase    
   TEST_DEPENDS
     
   DESCRIPTION
