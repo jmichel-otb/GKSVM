@@ -22,7 +22,7 @@
 #include "itkDataObject.h"
 #include "itkVariableLengthVector.h"
 #include "itkTimeProbe.h"
-#include "otb_libsvm.h"
+#include "gksvm.h"
 
 namespace otb
 {

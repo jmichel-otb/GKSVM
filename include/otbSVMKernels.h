@@ -31,7 +31,7 @@
 #include "otbNonGaussianRBFKernelFunctor.h"
 #include "otbMixturePolyRBFKernelFunctor.h"
 
-#include "otb_libsvm.h"
+#include "gksvm.h"
 
 namespace otb
 {

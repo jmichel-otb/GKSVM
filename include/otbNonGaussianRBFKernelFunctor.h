@@ -20,7 +20,7 @@
 #ifndef __otbNonGaussianRBFKernelFunctor_h
 #define __otbNonGaussianRBFKernelFunctor_h
 
-#include "otb_libsvm.h"
+#include "gksvm.h"
 
 //FIXME: shouldn't it be in the Functor namespace?
 namespace otb

@@ -20,7 +20,7 @@
 #ifndef __otbSpectralAngleKernelFunctor_h
 #define __otbSpectralAngleKernelFunctor_h
 
-#include "otb_libsvm.h"
+#include "gksvm.h"
 
 namespace otb
 {

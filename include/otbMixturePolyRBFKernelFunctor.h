@@ -20,7 +20,7 @@
 #ifndef __otbMixturePolyRBFKernelFunctor_h
 #define __otbMixturePolyRBFKernelFunctor_h
 
-#include "otb_libsvm.h"
+#include "gksvm.h"
 
 namespace otb
 {
