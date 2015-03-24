@@ -43,7 +43,7 @@ namespace otb
  * interface with keyword Coef (def 2.0).
  *
  *
- * \ingroup OTBSVMLearning
+ * \ingroup OTBGKSVM
  */
 
 class SpectralAngleKernelFunctor

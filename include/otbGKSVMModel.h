@@ -57,7 +57,7 @@ namespace otb
  *
  * \ingroup ClassificationFilters
  *
- * \ingroup OTBSVMLearning
+ * \ingroup OTBGKSVM
  */
 template <class TValue, class TLabel>
 class ITK_EXPORT GKSVMModel : public itk::DataObject

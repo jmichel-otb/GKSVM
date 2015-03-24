@@ -41,7 +41,7 @@ namespace otb
  * to be fixed through \code SetValue \endcode with keywords: Gamma (def 1.0),
  * Coef (def 1.0) and Degree (def 1.0).
  *
- * \ingroup OTBSVMLearning
+ * \ingroup OTBGKSVM
  */
 
 class ChangeProfileKernelFunctor

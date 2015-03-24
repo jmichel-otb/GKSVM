@@ -39,7 +39,7 @@ namespace otb
  * Alpha (def=1), Beta (def=2) and Gamma (def 1.0).
  *
  *
- * \ingroup OTBSVMLearning
+ * \ingroup OTBGKSVM
  */
 class NonGaussianRBFKernelFunctor
   : public GenericKernelFunctorBase
