@@ -24,6 +24,8 @@
 #include "itkTimeProbe.h"
 #include "gksvm.h"
 
+using namespace gksvm;
+
 namespace otb
 {
 

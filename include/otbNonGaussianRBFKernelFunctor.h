@@ -22,6 +22,8 @@
 
 #include "gksvm.h"
 
+using namespace gksvm;
+
 //FIXME: shouldn't it be in the Functor namespace?
 namespace otb
 {

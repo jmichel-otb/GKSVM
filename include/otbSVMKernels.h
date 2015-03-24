@@ -33,6 +33,8 @@
 
 #include "gksvm.h"
 
+using namespace gksvm;
+
 namespace otb
 {
 /** \class CustomKernelFunctor
